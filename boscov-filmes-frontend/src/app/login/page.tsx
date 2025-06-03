@@ -28,16 +28,23 @@ export default function Login() {
             });
             const token = response.data.token;
             localStorage.setItem("token", token);
-            Cookies.set("token", token); // <-- Salva o token no cookie
-            router.push("/home"); 
-        } catch (err) {
+            Cookies.set("token", token)
+            const decoded: any = jwtDecode(token);
+            console.log("Token decodificado:", decoded);
+
+            if (decoded.tipo === "admin") {
+                router.push("/admin/home");
+            } else {
+                router.push("/user/home");
+            }
+        } catch (error) {
             setErro("Email ou senha inválidos");
         }
     }
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-            <Card className="w-full max-w-md p-8"> {/* aumente max-w e padding */}
+            <Card className="w-full max-w-md p-8">
                 <CardHeader>
                     <CardTitle className="text-3xl text-center">Login</CardTitle> {/* fonte maior */}
                 </CardHeader>
