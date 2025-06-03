@@ -3,7 +3,8 @@ import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-export default function Home() {
+
+export default function InitialPage() {
   const router = useRouter();
 
   const handleLogin = () => {
@@ -37,7 +38,7 @@ export default function Home() {
 
           <div className='flex flex-col gap-20 mt-8 w-full max-w-md'>
             <Button className="mt-4 w-full h-14 text-lg cursor-pointer"
-              onClick={handleRegister}
+              onClick={handleLogin}
             >
               Login
             </Button>
