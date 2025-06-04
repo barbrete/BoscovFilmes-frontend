@@ -5,55 +5,53 @@ import axios from "axios";
 
 interface Movie {
   id?: number;
-  titulo: string;
+  nome: string;
   diretor: string;
-  ano: number;
-  generoFilme:string;
+  anoLancamento: Date;
+  duracao: string;
+  produtora: string;
+  classificacao: string;
   poster: string;
+  generos: number[];
 }
 
 interface ModalFilmesProps {
   movie?: Movie;
   onClose: () => void;
   onSubmit: (movie: Movie) => void;
+  generos: { id: number; descricao: string }[];
+
 }
 interface Genre {
   id: number;
-  nome: string;
+  descricao: string;
 }
-export default function ModalFilmes({ movie, onClose, onSubmit }: ModalFilmesProps) {
-  const [titulo, setTitulo] = useState(movie ? movie.titulo : "");
+export default function ModalFilmes({ movie, onClose, onSubmit, generos }: ModalFilmesProps) {
+  const [nome, setNome] = useState(movie ? movie.nome : "");
   const [diretor, setDiretor] = useState(movie ? movie.diretor : "");
-  const [ano, setAno] = useState(movie ? movie.ano : new Date().getFullYear());
+  const [ano, setAno] = useState(movie ? movie.anoLancamento : new Date().getFullYear());
   const [poster, setPoster] = useState(movie ? movie.poster : "");
-  const [generoFilme, setGeneroFilme] = useState(movie ? movie.generoFilme : "");
-  const [genres, setGenres] = useState<Genre[]>([]);
-
+  const [generosSelecionados, setGenerosSelecionados] = useState<number[]>(movie ? movie.generos : []);
+  const [duracao, setDuracao] = useState(movie ? movie.duracao : "");
+  const [produtora, setProdutora] = useState(movie ? movie.produtora : "");
+  const [classificacao, setClassificacao] = useState(movie ? movie.classificacao : "");
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newMovie: Movie = {
-      ...(movie && { id: movie.id }),
-      titulo,
-      diretor,
-      ano,
-      generoFilme,
-      poster,
-    };
-    onSubmit(newMovie);
+  e.preventDefault();
+  // ano é uma string "YYYY-MM-DD" vinda do input type="date"
+  const anoDate = new Date(ano); // converte corretamente para Date
+  const novoFilme: Movie = {
+    ...(movie && { id: movie.id }),
+    nome,
+    diretor,
+    anoLancamento: anoDate, // agora é Date, como espera sua interface
+    duracao,
+    produtora,
+    classificacao,
+    poster,
+    generos: generosSelecionados,
   };
-
-
-useEffect(() => {
-    async function fetchGenres() {
-      try {
-        const response = await axios.get("http://localhost:3001/genres");
-        setGenres(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar gêneros:", error);
-      }
-    }
-    fetchGenres();
-  }, []);
+  onSubmit(novoFilme);
+};
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
@@ -64,8 +62,8 @@ useEffect(() => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="text"
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
             placeholder="Título"
             className="border p-2 rounded"
             required
@@ -79,29 +77,52 @@ useEffect(() => {
             required
           />
           <input
-            type="number"
+            type="date"
             value={ano}
             onChange={(e) => setAno(Number(e.target.value))}
             placeholder="Ano"
             className="border p-2 rounded"
             required
           />
-          {/* Aqui vai precisar colocar algum  dropdown, que eu vou criar no genero e associar a esse generofilme*/}
           <select
-            value={generoFilme}
-            onChange={(e) => setGeneroFilme(e.target.value)}
-            className="border p-2 rounded"
+            multiple
+            value={generosSelecionados.map(String)}
+            onChange={e => {
+              const values = Array.from(e.target.selectedOptions, option => Number(option.value));
+              setGenerosSelecionados(values);
+            }}
             required
           >
-            <option value="" disabled>
-              Selecione o Gênero
-            </option>
-            {genres.map((genre) => (
-              <option key={genre.id} value={genre.id.toString()}>
-                {genre.nome}
+            {generos.map(genero => (
+              <option key={genero.id} value={genero.id}>
+                {genero.descricao}
               </option>
             ))}
           </select>
+          <input
+            type="text"
+            value={duracao}
+            onChange={(e) => setDuracao(e.target.value)}
+            placeholder="Duração (ex: 02:00:00)"
+            className="border p-2 rounded"
+            required
+          />
+          <input
+            type="text"
+            value={produtora}
+            onChange={(e) => setProdutora(e.target.value)}
+            placeholder="Produtora"
+            className="border p-2 rounded"
+            required
+          />
+          <input
+            type="text"
+            value={classificacao}
+            onChange={(e) => setClassificacao(e.target.value)}
+            placeholder="Classificação"
+            className="border p-2 rounded"
+            required
+          />
           <input
             type="text"
             value={poster}
