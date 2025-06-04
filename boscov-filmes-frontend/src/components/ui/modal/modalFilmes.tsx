@@ -20,7 +20,6 @@ interface ModalFilmesProps {
   onClose: () => void;
   onSubmit: (movie: Movie) => void;
   generos: { id: number; descricao: string }[];
-
 }
 interface Genre {
   id: number;
@@ -29,30 +28,31 @@ interface Genre {
 export default function ModalFilmes({ movie, onClose, onSubmit, generos }: ModalFilmesProps) {
   const [nome, setNome] = useState(movie ? movie.nome : "");
   const [diretor, setDiretor] = useState(movie ? movie.diretor : "");
-  const [ano, setAno] = useState(movie ? movie.anoLancamento : new Date().getFullYear());
+  const [ano, setAno] = useState<Date>(movie ? movie.anoLancamento : new Date());
   const [poster, setPoster] = useState(movie ? movie.poster : "");
   const [generosSelecionados, setGenerosSelecionados] = useState<number[]>(movie ? movie.generos : []);
   const [duracao, setDuracao] = useState(movie ? movie.duracao : "");
   const [produtora, setProdutora] = useState(movie ? movie.produtora : "");
   const [classificacao, setClassificacao] = useState(movie ? movie.classificacao : "");
+  
   const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  // ano é uma string "YYYY-MM-DD" vinda do input type="date"
-  const anoDate = new Date(ano); // converte corretamente para Date
-  const novoFilme: Movie = {
-    ...(movie && { id: movie.id }),
-    nome,
-    diretor,
-    anoLancamento: anoDate, // agora é Date, como espera sua interface
-    duracao,
-    produtora,
-    classificacao,
-    poster,
-    generos: generosSelecionados,
+    e.preventDefault();
+    const novoFilme: Movie = {
+      ...(movie && { id: movie.id }),
+      nome,
+      diretor,
+      anoLancamento: ano,
+      duracao,
+      produtora,
+      classificacao,
+      poster,
+      generos: generosSelecionados,
+    };
+    onSubmit(novoFilme);
   };
-  onSubmit(novoFilme);
-};
-
+useEffect(() => {
+    console.log("Generos recebidos:", generos);
+}, [generos]);
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
       <div className="bg-white p-6 rounded-md w-full max-w-md">
@@ -78,27 +78,34 @@ export default function ModalFilmes({ movie, onClose, onSubmit, generos }: Modal
           />
           <input
             type="date"
-            value={ano}
-            onChange={(e) => setAno(Number(e.target.value))}
+            value={ano.toISOString().split("T")[0]}
+            onChange={(e) => setAno(new Date(e.target.value))}
             placeholder="Ano"
             className="border p-2 rounded"
             required
           />
-          <select
-            multiple
-            value={generosSelecionados.map(String)}
-            onChange={e => {
-              const values = Array.from(e.target.selectedOptions, option => Number(option.value));
-              setGenerosSelecionados(values);
-            }}
-            required
-          >
-            {generos.map(genero => (
-              <option key={genero.id} value={genero.id}>
-                {genero.descricao}
-              </option>
-            ))}
-          </select>
+<div className="flex flex-col gap-2">
+    <span className="font-semibold">Selecione os Gêneros</span>
+    {generos.map((genero) => (
+        <label key={genero.id} className="inline-flex items-center">
+            <input
+                type="checkbox"
+                value={genero.id}
+                checked={generosSelecionados.includes(genero.id)}
+                onChange={(e) => {
+                    const checked = e.target.checked;
+                    if (checked) {
+                        setGenerosSelecionados([...generosSelecionados, genero.id]);
+                    } else {
+                        setGenerosSelecionados(generosSelecionados.filter(id => id !== genero.id));
+                    }
+                }}
+                className="mr-2"
+            />
+            {genero.descricao}
+        </label>
+    ))}
+</div>
           <input
             type="text"
             value={duracao}

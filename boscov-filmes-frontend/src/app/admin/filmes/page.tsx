@@ -78,7 +78,7 @@ export default function Filmes() {
     useEffect(() => {
         async function buscarFilmesRecentes() {
             try {
-                const resposta = await axios.get("http:localhos/3000/filmes/recentes");
+                const resposta = await axios.get("http://localhost:3000/filmes/recentes");
                 setMovies(resposta.data);
             } catch (error) {
                 console.error("Erro ao buscar filmes recentes:", error);
@@ -100,20 +100,22 @@ export default function Filmes() {
     }
 
     async function salvarFilme(filme: Movie) {
-  try {
-    await axios.post("http://localhost:3001/filmes", {
-      nome: filme.nome,
-      duracao: filme.duracao,
-      diretor: filme.diretor,
-      anoLancamento: filme.anoLancamento,
-      poster: filme.poster,
-      generos: [Number(filme.generos)] // array de ids de gênero
-    });
-    // Atualize a lista de filmes após salvar, se quiser
-  } catch (error) {
-    console.error("Erro ao salvar filme:", error);
-  }
-}
+        try {
+            await axios.post("http://localhost:3001/filmes", {
+                nome: filme.nome,
+                duracao: filme.duracao,
+                diretor: filme.diretor,
+                anoLancamento: filme.anoLancamento,
+                poster: filme.poster,
+                produtora: filme.produtora,
+                classificacao: filme.classificacao,
+                generos: [Number(filme.generos)]
+            });
+            // Atualize a lista de filmes após salvar, se quiser
+        } catch (error) {
+            console.error("Erro ao salvar filme:", error);
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -169,12 +171,14 @@ export default function Filmes() {
                     </div>
                 </section>
 
-                <ModalFilmes
-                    movie={editingMovie || undefined}
-                    onClose={() => setIsModalOpen(false)}
-                    onSubmit={salvarFilme}
-                    generos={generos}
-                />
+                {isModalOpen && (
+                    <ModalFilmes
+                        movie={editingMovie || undefined}
+                        onClose={() => setIsModalOpen(false)}
+                        onSubmit={salvarFilme}
+                        generos={generos}
+                    />
+                )}
             </main>
         </div>
     );

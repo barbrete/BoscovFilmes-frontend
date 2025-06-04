@@ -17,7 +17,6 @@ export default function Generos() {
     const [editandoGenero, setEditandoGenero] = useState<Genre | null>(null);
     const [modalGeneroAberto, setModalGeneroAberto] = useState(false);
 
-
     useEffect(() => {
         async function buscarGeneros() {
             try {

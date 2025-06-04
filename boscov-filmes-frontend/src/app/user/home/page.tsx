@@ -11,6 +11,13 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
+interface Avaliacao {
+    id: number;
+    filme: string;
+    comentario: string;
+    nota: number;
+}
+
 interface Movie {
   id: number;
   titulo: string;
@@ -59,6 +66,19 @@ useEffect(() => {
     }
   }
   buscarFilmesRecentes();
+}, []);
+
+useEffect(() => {
+  async function buscarFilmes() {
+    try{
+        const resposta = await axios.get("http:localhos/3000/filmes");
+        setMovies(resposta.data);;
+    }
+    catch (error){
+      console.error("Erro ao buscar filmes:", error);
+    }
+  }
+  buscarFilmes();
 }, []);
 
   return (
