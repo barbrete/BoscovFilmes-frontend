@@ -1,22 +1,31 @@
 "use client"
 import React, { useState } from "react";
-import { Dialog } from "@headlessui/react";
+import { Dialog, DialogTitle } from "@headlessui/react";
 import { Star } from "lucide-react";
 import { Button } from "../button";
+
+interface Usuario {
+  id: number;
+  apelido: string;
+}
+
+interface Avaliacao {
+  idUsuario: number;
+  idFilme: number;
+  nota: number;
+  comentario?: string;
+  usuario?: Usuario;
+}
 
 type ModalAvaliacaoProps = {
   open: boolean;
   onClose: () => void;
   movieTitle: string;
+  avaliacao: Avaliacao | null;
   onSubmit: (rating: number, comment: string) => void;
 };
 
-export default function ModalAvaliacao({
-  open,
-  onClose,
-  movieTitle,
-  onSubmit,
-}: ModalAvaliacaoProps) {
+export default function ModalAvaliacao({ open, onClose, movieTitle, avaliacao, onSubmit}: ModalAvaliacaoProps) {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
@@ -33,9 +42,9 @@ export default function ModalAvaliacao({
     <Dialog open={open} onClose={onClose} className="fixed z-50 inset-0 flex items-center justify-center">
       <div className="fixed inset-0 bg-black bg-opacity-40" aria-hidden="true" />
       <div className="relative bg-white rounded-xl shadow-xl p-8 w-full max-w-md z-50">
-        <Dialog.Title className="text-2xl font-bold mb-4 text-center">
+        <DialogTitle className="text-2xl font-bold mb-4 text-center">
           Avaliar "{movieTitle}"
-        </Dialog.Title>
+        </DialogTitle>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex justify-center gap-1 mb-2">
             {[1, 2, 3, 4, 5].map((star) => (

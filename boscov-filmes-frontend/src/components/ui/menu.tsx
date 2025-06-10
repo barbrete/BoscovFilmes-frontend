@@ -1,6 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { ChevronLeft, X, ChevronRight } from "lucide-react";
+import { X, ChevronRight } from "lucide-react";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 interface SideMenuProps {
   isOpen: boolean;
@@ -10,6 +12,12 @@ interface SideMenuProps {
 }
 
 export default function SideMenu({ isOpen, onClose, onOpen, role }: SideMenuProps) {
+  const router = useRouter();
+
+  function handleLogout() {
+    Cookies.remove("token");
+    router.push("/login"); 
+  }
   return (
     <aside
       className={`z-50 bg-gray-700 text-white h-full fixed top-0 left-0 transition-all duration-300 ${isOpen ? "w-64" : "w-16"
@@ -55,7 +63,7 @@ export default function SideMenu({ isOpen, onClose, onOpen, role }: SideMenuProp
               {role === "user" && (
                 <>
                   <li className="mb-2">
-                    <Link href="/admin/home" className="hover:underline">
+                    <Link href="/user/home" className="hover:underline">
                       Página Principal
                     </Link>
                   </li>
@@ -73,9 +81,9 @@ export default function SideMenu({ isOpen, onClose, onOpen, role }: SideMenuProp
                 </>
               )}
               <li className="mb-2">
-                <Link href="/" className="hover:underline">
+                <button onClick={handleLogout} className="hover:underline w-full text-left">
                   Sair
-                </Link>
+                </button>
               </li>
             </ul>
           </nav>

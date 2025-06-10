@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import ModalAvaliacao from "@/components/ui/modal/modal_avaliation";
+import ModalAvaliacao from "@/components/ui/modal/modalAvaliacao";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,76 +10,106 @@ import SideMenu from "@/components/ui/menu";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import ModalDetalhesFilme from "@/components/ui/modal/ModalDetalhesFilme";
+
+interface Usuario {
+  id: number;
+  apelido: string;
+}
 
 interface Avaliacao {
-    id: number;
-    filme: string;
-    comentario: string;
-    nota: number;
+  idUsuario: number;
+  idFilme: number;
+  nota: number;
+  comentario?: string;
+  usuario?: Usuario;
+}
+
+interface Genero {
+  id: number;
+  descricao: string;
 }
 
 interface Movie {
   id: number;
-  titulo: string;
+  nome: string;
   diretor: string;
-  ano: number;
-  generoFilme: string;
+  anoLancamento: Date;
+  duracao: number;
+  produtora: string;
+  classificacao: string;
   poster: string;
+  generos?: Genero[];
+  avaliacoes?: Avaliacao[];
 }
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [movie, setMovies] = useState<Movie[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<{ title: string } | null>(null);
+  const [avaliarOpen, setAvaliarOpen] = useState(false);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [avaliacaoEditando, setAvaliacaoEditando] = useState<Avaliacao | null>(null);
 
-  const movies = [
-    { id: 1, title: "Inception", poster: "/home_page/posters/filmes_us.jpg" },
-    { id: 2, title: "Interstellar", poster: "/posters/interstellar.jpg" },
-    { id: 3, title: "The Dark Knight", poster: "/posters/darkknight.jpg" },
-    { id: 4, title: "Parasite", poster: "/posters/parasite.jpg" }
-  ];
+  const handleEditarAvaliacao = (avaliacao: Avaliacao) => {
+    setAvaliacaoEditando(avaliacao);
+    setAvaliarOpen(true);
+  };
 
-let tipoUsuario: "admin" | "user" | null = null;
+  const handleNovaAvaliacao = () => {
+    setAvaliacaoEditando(null);
+    setAvaliarOpen(true);
+  };
 
-if (typeof window !== "undefined") {
+  const handleExcluirAvaliacao = async (avaliacao: Avaliacao | null) => {
+    if (!avaliacao) return;
+    try {
+      await axios.delete(`http://localhost:3001/avaliacoes/${avaliacao.idUsuario}/${avaliacao.idFilme}`);
+      const filmesAtualizados = await buscarFilmes();
+      const atualizado = filmesAtualizados.find((m: { id: number | undefined }) => m.id === selectedMovie?.id);
+      setSelectedMovie(atualizado || null);
+    } catch (error) {
+      console.error("Erro ao excluir avaliação:", error);
+    }
+  };
+
+  let tipoUsuario: "admin" | "user" | null = null;
+
+  if (typeof window !== "undefined") {
+    const token = Cookies.get("token");
+    if (token) {
+      try {
+        const decoded: any = jwtDecode(token);
+        tipoUsuario = decoded.tipo || null;
+      } catch (e) {
+        tipoUsuario = null;
+      }
+    }
+  }
+
+  const buscarFilmes = async () => {
+    try {
+      const resposta = await axios.get("http://localhost:3001/filmes");
+      setMovies(resposta.data);
+      return resposta.data;
+    } catch (error) {
+      console.error("Erro ao buscar filmes:", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    buscarFilmes();
+  }, []);
+
   const token = Cookies.get("token");
+  let usuarioId = null;
   if (token) {
     try {
       const decoded: any = jwtDecode(token);
-      console.log("Token decodificado:", decoded);
-      tipoUsuario = decoded.tipo || null;
-    } catch (e) {
-      tipoUsuario = null;
-    }
+      usuarioId = decoded.id;
+    } catch { }
   }
-}
-
-useEffect(() => {
-  async function buscarFilmesRecentes() {
-    try{
-        const resposta = await axios.get("http:localhos/3000/filmes/recentes");
-        setMovies(resposta.data);;
-    }
-    catch (error){
-      console.error("Erro ao buscar filmes recentes:", error);
-    }
-  }
-  buscarFilmesRecentes();
-}, []);
-
-useEffect(() => {
-  async function buscarFilmes() {
-    try{
-        const resposta = await axios.get("http:localhos/3000/filmes");
-        setMovies(resposta.data);;
-    }
-    catch (error){
-      console.error("Erro ao buscar filmes:", error);
-    }
-  }
-  buscarFilmes();
-}, []);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -96,81 +126,78 @@ useEffect(() => {
           <Input placeholder="Procurar Filmes..." className="w-1/3" />
         </div>
       </header>
-    
+
       <main className="flex-grow max-w-6xl mx-auto p-8 ml-16">
-        <h2 className="text-2xl font-semibold mb-6">Filmes Recentes</h2>
-        {movie.length > 0 ? (
+        <h2 className="text-2xl font-semibold mb-6">Filmes</h2>
+        {movies.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {movies.map((movie) => (
-              <Card key={movie.id} className="shadow-lg">
-                <CardHeader className="h-72 relative p-0">
+              <Card key={movie.id} className="shadow-lg flex flex-col items-center">
+                <CardHeader className="h-72 w-full relative p-0 flex justify-center">
                   <Image
                     src={movie.poster}
-                    alt={movie.title}
+                    alt={movie.nome}
                     fill
                     className="object-cover rounded-t-md"
                   />
                 </CardHeader>
-                <CardContent>
-                  <CardTitle className="text-lg font-bold">
-                    {movie.title}
+                <CardContent className="w-full flex flex-col items-center">
+                  <CardTitle className="text-lg font-bold text-center">
+                    {movie.nome}
                   </CardTitle>
                   <Button
-                    className="mt-2 w-full cursor-pointer mb-5"
+                    className="mt-2 w-full cursor-pointer mb-2"
                     onClick={() => {
                       setSelectedMovie(movie);
                       setModalOpen(true);
                     }}
                   >
-                    Avaliar
+                    Ver mais
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : (
-          <p>Nenhum filme recente encontrado.</p>
+          <p>Nenhum filme encontrado.</p>
         )}
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {movies.map((movie) => (
-            <Card key={movie.id} className="shadow-lg ">
-              <CardHeader className="h-72 relative p-0">
-                <Image
-                  src={movie.poster}
-                  alt={movie.title}
-                  fill
-                  className="object-cover rounded-t-md"
-                />
-              </CardHeader>
-              <CardContent>
-                <CardTitle className="text-lg font-bold">
-                  {movie.title}
-                </CardTitle>
-                <Button
-                  className="mt-2 w-full cursor-pointer mb-5"
-                  onClick={() => {
-                    setSelectedMovie(movie);
-                    setModalOpen(true);
-                  }}
-                >
-                  Avaliar
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       </main>
 
+      {selectedMovie && modalOpen && (
+        <ModalDetalhesFilme
+          movie={selectedMovie}
+          onClose={() => setModalOpen(false)}
+          onAvaliar={handleNovaAvaliacao}
+          onEditarAvaliacao={handleEditarAvaliacao}
+          onExcluirAvaliacao={handleExcluirAvaliacao}
+          idUsuario={usuarioId}
+        />
+      )}
+
       <ModalAvaliacao
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        movieTitle={selectedMovie?.title || ""}
-        onSubmit={(rating, comment) => {
-          if (selectedMovie) {
-            console.log(`Avaliação para ${selectedMovie.title}: ${rating} estrelas, comentário: ${comment}`);
+        open={avaliarOpen}
+        onClose={() => setAvaliarOpen(false)}
+        movieTitle={selectedMovie?.nome || ""}
+        avaliacao={avaliacaoEditando}
+        onSubmit={async (rating, comment) => {
+          if (avaliacaoEditando) {
+            await axios.put(`http://localhost:3001/avaliacoes/${usuarioId}/${selectedMovie?.id}`,
+              {
+                nota: rating,
+                comentario: comment,
+              });
+          } else {
+            await axios.post("http://localhost:3001/avaliacoes", {
+              idFilme: selectedMovie?.id,
+              idUsuario: usuarioId,
+              nota: rating,
+              comentario: comment,
+            });
           }
-          setModalOpen(false);
+          const filmesAtualizados = await buscarFilmes();
+          const atualizado = filmesAtualizados.find((m: { id: number | undefined; }) => m.id === selectedMovie?.id);
+          setSelectedMovie(atualizado || null);
+          setAvaliacaoEditando(null);
         }}
       />
 

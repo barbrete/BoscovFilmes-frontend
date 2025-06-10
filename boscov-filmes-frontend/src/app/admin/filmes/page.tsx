@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import ModalAvaliacao from "@/components/ui/modal/modal_avaliation";
+import ModalAvaliacao from "@/components/ui/modal/modalAvaliacao";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,52 +134,54 @@ export default function Filmes() {
             </header>
 
             <main className="flex-grow max-w-6xl mx-auto p-8 ml-16">
-                <section>
-                    <h2 className="text-2xl font-semibold mb-4">Gerenciar Filmes</h2>
-                    <Button className="mb-4"
-                        onClick={() => {
-                            setEditingMovie(null);
-                            setIsModalOpen(true);
+  <section>
+    <h2 className="text-2xl font-semibold mb-4">Gerenciar Filmes</h2>
+    <Button className="mb-4"
+      onClick={() => {
+        setEditingMovie(null);
+        setIsModalOpen(true);
+      }}
+    >
+      Adicionar Filme
+    </Button>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {movies.map((movie) => (
+        <Card key={movie.id} className="shadow-lg flex flex-col items-center">
+          <CardHeader className="h-72 w-full relative p-0 flex justify-center">
+            <Image
+              src={movie.poster}
+              alt={movie.nome}
+              fill
+              className="object-cover rounded-t-md"
+            />
+          </CardHeader>
+          <CardContent className="w-full flex flex-col items-center">
+            <CardTitle className="text-lg font-bold text-center">
+              {movie.nome}
+            </CardTitle>
+            <div className="flex gap-2 mt-2 w-full">
+              <Button className="flex-1" onClick={() => handleEditMovie(movie)}>
+                Editar
+              </Button>
+              <Button className="flex-1" onClick={() => movie.id && handleDeleteMovie(movie.id)}>
+                Excluir
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </section>
 
-                        }}
-                    >
-                        Adicionar Filme
-                    </Button>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                        {movies.map((movie) => (
-                            <Card key={movie.id} className="shadow-lg">
-                                <CardHeader className="h-48 relative p-0">
-                                    <img
-                                        src={movie.poster}
-                                        alt={movie.nome}
-                                        className="object-cover w-full h-full rounded-t-md"
-                                    />
-                                </CardHeader>
-                                <CardContent>
-                                    <CardTitle className="text-lg font-bold">{movie.nome}</CardTitle>
-                                    <div className="flex gap-2 mt-2">
-                                        <Button onClick={() => handleEditMovie(movie)}>
-                                            Editar
-                                        </Button>
-                                        <Button onClick={() => movie.id && handleDeleteMovie(movie.id)}>
-                                            Excluir
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </section>
-
-                {isModalOpen && (
-                    <ModalFilmes
-                        movie={editingMovie || undefined}
-                        onClose={() => setIsModalOpen(false)}
-                        onSubmit={salvarFilme}
-                        generos={generos}
-                    />
-                )}
-            </main>
+  {isModalOpen && (
+    <ModalFilmes
+      movie={editingMovie || undefined}
+      onClose={() => setIsModalOpen(false)}
+      onSubmit={salvarFilme}
+      generos={generos}
+    />
+  )}
+</main>
         </div>
     );
 }
