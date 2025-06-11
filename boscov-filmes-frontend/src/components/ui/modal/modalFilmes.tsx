@@ -2,13 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
+import { time } from "console";
 
 interface Movie {
   id?: number;
   nome: string;
   diretor: string;
   anoLancamento: Date;
-  duracao: string;
+  duracao: number;
   produtora: string;
   classificacao: string;
   poster: string;
@@ -21,38 +22,48 @@ interface ModalFilmesProps {
   onSubmit: (movie: Movie) => void;
   generos: { id: number; descricao: string }[];
 }
-interface Genre {
-  id: number;
-  descricao: string;
-}
+
 export default function ModalFilmes({ movie, onClose, onSubmit, generos }: ModalFilmesProps) {
   const [nome, setNome] = useState(movie ? movie.nome : "");
   const [diretor, setDiretor] = useState(movie ? movie.diretor : "");
   const [ano, setAno] = useState<Date>(movie ? movie.anoLancamento : new Date());
   const [poster, setPoster] = useState(movie ? movie.poster : "");
-  const [generosSelecionados, setGenerosSelecionados] = useState<number[]>(movie ? movie.generos : []);
-  const [duracao, setDuracao] = useState(movie ? movie.duracao : "");
+  const [generosSelecionados, setGenerosSelecionados] = useState<number[]>(
+    movie && Array.isArray(movie.generos) ? movie.generos : []
+  );
+  const [duracao, setDuracao] = useState<number>(movie ? movie.duracao : 0);
   const [produtora, setProdutora] = useState(movie ? movie.produtora : "");
   const [classificacao, setClassificacao] = useState(movie ? movie.classificacao : "");
-  
-  const handleSubmit = (e: React.FormEvent) => {
+  const [mensagem, setMensagem] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const novoFilme: Movie = {
-      ...(movie && { id: movie.id }),
-      nome,
-      diretor,
-      anoLancamento: ano,
-      duracao,
-      produtora,
-      classificacao,
-      poster,
-      generos: generosSelecionados,
-    };
-    onSubmit(novoFilme);
+    setMensagem(null);
+    setErro(null);
+    try {
+      await onSubmit({
+        ...(movie && { id: movie.id }),
+        nome,
+        diretor,
+        anoLancamento: ano,
+        duracao,
+        produtora,
+        classificacao,
+        poster,
+        generos: generosSelecionados,
+      });
+      setMensagem(movie ? "Filme atualizado com sucesso!" : "Filme adicionado com sucesso!");
+      setTimeout(() => {
+        setMensagem(null);
+        onClose();
+      }, 1200);
+    } catch (err: any) {
+      setErro(err?.message || "Erro ao salvar o filme.");
+    }
   };
-useEffect(() => {
-    console.log("Generos recebidos:", generos);
-}, [generos]);
+
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
       <div className="bg-white p-6 rounded-md w-full max-w-md">
@@ -78,38 +89,41 @@ useEffect(() => {
           />
           <input
             type="date"
-            value={ano.toISOString().split("T")[0]}
-            onChange={(e) => setAno(new Date(e.target.value))}
+            value={ano instanceof Date && !isNaN(ano.getTime()) ? ano.toISOString().split("T")[0] : ""}
+            onChange={(e) => {
+              if (e.target.value) {
+                setAno(new Date(e.target.value));
+              }
+            }}
             placeholder="Ano"
             className="border p-2 rounded"
             required
           />
-<div className="flex flex-col gap-2">
-    <span className="font-semibold">Selecione os Gêneros</span>
-    {generos.map((genero) => (
-        <label key={genero.id} className="inline-flex items-center">
-            <input
-                type="checkbox"
-                value={genero.id}
-                checked={generosSelecionados.includes(genero.id)}
-                onChange={(e) => {
-                    const checked = e.target.checked;
-                    if (checked) {
-                        setGenerosSelecionados([...generosSelecionados, genero.id]);
+          <div className="flex flex-col gap-2">
+            <span className="font-semibold">Selecione os Gêneros</span>
+            {generos.map((genero) => (
+              <label key={genero.id} className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  value={genero.id}
+                  checked={generosSelecionados.includes(genero.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setGenerosSelecionados([...generosSelecionados, genero.id]);
                     } else {
-                        setGenerosSelecionados(generosSelecionados.filter(id => id !== genero.id));
+                      setGenerosSelecionados(generosSelecionados.filter(id => id !== genero.id));
                     }
-                }}
-                className="mr-2"
-            />
-            {genero.descricao}
-        </label>
-    ))}
-</div>
+                  }}
+                  className="mr-2"
+                />
+                {genero.descricao}
+              </label>
+            ))}
+          </div>
           <input
             type="text"
             value={duracao}
-            onChange={(e) => setDuracao(e.target.value)}
+            onChange={(e) => setDuracao(Number(e.target.value))}
             placeholder="Duração (ex: 02:00:00)"
             className="border p-2 rounded"
             required
@@ -139,15 +153,33 @@ useEffect(() => {
             required
           />
           <div className="flex justify-end gap-2">
-            <Button type="button" onClick={onClose}>
+            <Button
+              className="cursor-pointer"
+              type="button" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit">
+            <Button
+              className="cursor-pointer"
+              type="submit">
               {movie ? "Salvar" : "Adicionar"}
             </Button>
           </div>
+          {mensagem && (
+            <div className="bg-green-100 text-green-800 p-2 rounded text-center mb-2">
+              {mensagem}
+            </div>
+          )}
+          {erro && (
+            <div className="bg-red-100 text-red-800 p-2 rounded text-center mb-2">
+              {erro}
+            </div>
+          )}
         </form>
       </div>
     </div>
   );
+}
+
+function timeout(arg0: () => void, arg1: number) {
+  throw new Error("Function not implemented.");
 }
