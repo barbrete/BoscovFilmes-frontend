@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import ModalAvaliacao from "@/components/ui/modal/modalAvaliacao";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,177 +10,190 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import ModalFilmes from "@/components/ui/modal/modalFilmes";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface Movie {
-    id?: number;
-    nome: string;
-    diretor: string;
-    anoLancamento: Date;
-    duracao: string;
-    produtora: string;
-    classificacao: string;
-    poster: string;
-    generos: number[];
+  id?: number;
+  nome: string;
+  diretor: string;
+  anoLancamento: Date;
+  duracao: number;
+  produtora: string;
+  classificacao: string;
+  poster: string;
+  generos: number[];
 }
 
 interface Genre {
-    id: number;
-    descricao: string;
+  id: number;
+  descricao: string;
 }
 
 export default function Filmes() {
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [movies, setMovies] = useState<Movie[]>([]);
-    const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [generos, setGeneros] = useState<Genre[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [generos, setGeneros] = useState<Genre[]>([]);
 
-    let tipoUsuario: "admin" | "user" | null = null;
+  let tipoUsuario: "admin" | "user" | null = null;
 
-    if (typeof window !== "undefined") {
-        const token = Cookies.get("token");
-        if (token) {
-            try {
-                const decoded: any = jwtDecode(token);
-                console.log("Token decodificado:", decoded);
-                tipoUsuario = decoded.tipo || null;
-            } catch (e) {
-                tipoUsuario = null;
-            }
-        }
+  if (typeof window !== "undefined") {
+    const token = Cookies.get("token");
+    if (token) {
+      try {
+        const decoded: any = jwtDecode(token);
+        console.log("Token decodificado:", decoded);
+        tipoUsuario = decoded.tipo || null;
+      } catch (e) {
+        tipoUsuario = null;
+      }
     }
+  }
 
-    useEffect(() => {
-        async function fetchGeneros() {
-            try {
-                const response = await axios.get("http://localhost:3001/generos");
-                setGeneros(response.data);
-            } catch (error) {
-                console.error("Erro ao buscar gêneros:", error);
-            }
-        }
-        fetchGeneros();
-    }, []);
-
-    useEffect(() => {
-        async function fetchMovies() {
-            try {
-                const response = await axios.get("http://localhost:3001/filmes");
-                setMovies(response.data);
-            } catch (error) {
-                console.error("Erro ao buscar filmes:", error);
-            }
-        }
-        fetchMovies();
-    }, []);
-
-    useEffect(() => {
-        async function buscarFilmesRecentes() {
-            try {
-                const resposta = await axios.get("http://localhost:3000/filmes/recentes");
-                setMovies(resposta.data);
-            } catch (error) {
-                console.error("Erro ao buscar filmes recentes:", error);
-            }
-        }
-        buscarFilmesRecentes();
-    }, []);
-
-    function handleDeleteMovie(id: number) {
-        axios
-            .delete(`http://localhost:3001/filmes/${id}`)
-            .then(() => setMovies(movies.filter((movie) => movie.id !== id)))
-            .catch((error) => console.error("Erro ao excluir filme:", error));
+  useEffect(() => {
+    async function fetchGeneros() {
+      try {
+        const response = await axios.get("http://localhost:3001/generos");
+        setGeneros(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar gêneros:", error);
+      }
     }
+    fetchGeneros();
+  }, []);
 
-    function handleEditMovie(movie: Movie) {
-        setEditingMovie(movie);
-        setIsModalOpen(true);
+  useEffect(() => {
+    async function fetchMovies() {
+      try {
+        const response = await axios.get("http://localhost:3001/filmes");
+        setMovies(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar filmes:", error);
+      }
     }
+    fetchMovies();
+  }, []);
 
-    async function salvarFilme(filme: Movie) {
-        try {
-            await axios.post("http://localhost:3001/filmes", {
-                nome: filme.nome,
-                duracao: filme.duracao,
-                diretor: filme.diretor,
-                anoLancamento: filme.anoLancamento,
-                poster: filme.poster,
-                produtora: filme.produtora,
-                classificacao: filme.classificacao,
-                generos: [Number(filme.generos)]
-            });
-            // Atualize a lista de filmes após salvar, se quiser
-        } catch (error) {
-            console.error("Erro ao salvar filme:", error);
-        }
+  async function fetchMovies() {
+    try {
+      const response = await axios.get("http://localhost:3001/filmes");
+      setMovies(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar filmes:", error);
     }
+  }
 
-    return (
-        <div className="min-h-screen bg-gray-100 flex flex-col">
-            <SideMenu
-                isOpen={menuOpen}
-                onClose={() => setMenuOpen(false)}
-                onOpen={() => setMenuOpen(true)}
-                role={tipoUsuario}
-            />
+  function handleDeleteMovie(id: number) {
+    axios
+      .delete(`http://localhost:3001/filmes/${id}`)
+      .then(() => setMovies(movies.filter((movie) => movie.id !== id)))
+      .catch((error) => console.error("Erro ao excluir filme:", error));
+  }
 
-            <header className="bg-gray-800 text-white p-4 ml-16">
-                <div className="max-w-6xl mx-auto flex items-center justify-between">
-                    <h1 className="text-3xl font-bold">BoscovFilmes</h1>
-                    <Input placeholder="Procurar Filmes..." className="w-1/3" />
-                </div>
-            </header>
+  function handleEditMovie(movie: Movie) {
+    setEditingMovie(movie);
+    setIsModalOpen(true);
+  }
 
-            <main className="flex-grow max-w-6xl mx-auto p-8 ml-16">
-  <section>
-    <h2 className="text-2xl font-semibold mb-4">Gerenciar Filmes</h2>
-    <Button className="mb-4"
-      onClick={() => {
-        setEditingMovie(null);
-        setIsModalOpen(true);
-      }}
-    >
-      Adicionar Filme
-    </Button>
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {movies.map((movie) => (
-        <Card key={movie.id} className="shadow-lg flex flex-col items-center">
-          <CardHeader className="h-72 w-full relative p-0 flex justify-center">
-            <Image
-              src={movie.poster}
-              alt={movie.nome}
-              fill
-              className="object-cover rounded-t-md"
-            />
-          </CardHeader>
-          <CardContent className="w-full flex flex-col items-center">
-            <CardTitle className="text-lg font-bold text-center">
-              {movie.nome}
-            </CardTitle>
-            <div className="flex gap-2 mt-2 w-full">
-              <Button className="flex-1" onClick={() => handleEditMovie(movie)}>
-                Editar
-              </Button>
-              <Button className="flex-1" onClick={() => movie.id && handleDeleteMovie(movie.id)}>
-                Excluir
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  </section>
+  async function salvarFilme(filme: Movie) {
+    try {
+      if (filme.id) {
+        // Edição
+        await axios.put(`http://localhost:3001/filmes/${filme.id}`, {
+          nome: filme.nome,
+          duracao: filme.duracao,
+          diretor: filme.diretor,
+          anoLancamento: filme.anoLancamento,
+          poster: filme.poster,
+          produtora: filme.produtora,
+          classificacao: filme.classificacao,
+          generos: filme.generos,
+        });
+      } else {
+        // Criação
+        await axios.post("http://localhost:3001/filmes", {
+          nome: filme.nome,
+          duracao: filme.duracao,
+          diretor: filme.diretor,
+          anoLancamento: filme.anoLancamento,
+          poster: filme.poster,
+          produtora: filme.produtora,
+          classificacao: filme.classificacao,
+          generos: filme.generos,
+        });
+      }
+      await fetchMovies();
+    } catch (error) {
+      console.error("Erro ao salvar filme:", error);
+    }
+  }
 
-  {isModalOpen && (
-    <ModalFilmes
-      movie={editingMovie || undefined}
-      onClose={() => setIsModalOpen(false)}
-      onSubmit={salvarFilme}
-      generos={generos}
-    />
-  )}
-</main>
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <SideMenu
+        isOpen={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onOpen={() => setMenuOpen(true)}
+        role={tipoUsuario}
+      />
+
+      <header className="bg-gray-800 text-white p-4 ml-16">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <h1 className="text-3xl font-bold">BoscovFilmes</h1>
+          <Input placeholder="Procurar Filmes..." className="w-1/3" />
         </div>
-    );
+      </header>
+
+      <main className="flex-grow max-w-6xl mx-auto p-8 ml-16">
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Gerenciar Filmes</h2>
+          <Button className="mb-4"
+            onClick={() => {
+              setEditingMovie(null);
+              setIsModalOpen(true);
+            }}
+          >
+            Adicionar Filme
+          </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {movies.map((movie) => (
+              <Card key={movie.id} className="shadow-lg flex flex-col items-center">
+                <CardHeader className="h-72 w-full relative p-0 flex justify-center">
+                  <Image
+                    src={movie.poster}
+                    alt={movie.nome}
+                    fill
+                    className="object-cover rounded-t-md"
+                  />
+                </CardHeader>
+                <CardContent className="w-full flex flex-col items-center">
+                  <CardTitle className="text-lg font-bold text-center">
+                    {movie.nome}
+                  </CardTitle>
+                  <div className="flex gap-6 mt-2 w-full justify-center mb-3">
+                    <Button className="flex" onClick={() => handleEditMovie(movie)}>
+                      <Pencil className="" />
+                    </Button>
+                    <Button className="" onClick={() => movie.id && handleDeleteMovie(movie.id)}>
+                      <Trash2 className="" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {isModalOpen && (
+          <ModalFilmes
+            movie={editingMovie || undefined}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={salvarFilme}
+            generos={generos}
+          />
+        )}
+      </main>
+    </div>
+  );
 }

@@ -104,7 +104,7 @@ export default function Usuarios() {
 
         <section className="mt-10 w-full max-w-6xl">
           <div className="flex items-center mb-4">
-            <Button className="h-20 w-50 rounded-md text-xl"
+            <Button className="h-20 w-50 rounded-md text-xl cursor-pointer"
               onClick={handleCreateUser}>
               Criar Usuário <Plus className="!w-6 !h-6" />
             </Button>
@@ -121,13 +121,13 @@ export default function Usuarios() {
           {/* Botões de filtro */}
           <div className="flex justify-between gap-4 mb-8">
             <Button
-              className="h-10 w-70 rounded-md text-md"
+              className="h-10 w-70 rounded-md text-md cursor-pointer"
               variant={filtroStatus === "ativos" ? "default" : "outline"}
               onClick={() => setFiltroStatus("ativos")}
             >
               Mostrar Usuários Ativos <UserRoundCheck />
             </Button>
-            <Button className="h-10 w-70 rounded-md text-md"
+            <Button className="h-10 w-70 rounded-md text-md cursor-pointer"
               variant={filtroStatus === "desativados" ? "default" : "outline"}
               onClick={() => setFiltroStatus("desativados")}
             >
@@ -146,7 +146,7 @@ export default function Usuarios() {
                   }}
                   aria-label="Fechar"
                 >
-                  <X/>
+                  <X />
                 </button>
                 <h2 className="text-xl font-bold mb-4">
                   {usuarioEditando ? "Editar Usuário" : "Criar Usuário"}
@@ -188,14 +188,17 @@ export default function Usuarios() {
                   <p className="text-gray-600">{user.email}</p>
                   <p className="text-gray-600">Apelido: {user.apelido}</p>
                   <div className="flex gap-2 mt-2">
-                    <Button onClick={() => {
-                      setUsuarioEditando(user);
-                      setShowCreate(true);
-                    }}>
+                    <Button
+                      className="cursor-pointer"
+                      onClick={() => {
+                        setUsuarioEditando(user);
+                        setShowCreate(true);
+                      }}>
                       <Pencil />
                     </Button>
                     {filtroStatus === "ativos" ? (
                       <Button
+                        className="cursor-pointer"
                         variant="outline"
                         onClick={() => handleToggleUserStatus(user.id, false)}
                       >
@@ -203,6 +206,7 @@ export default function Usuarios() {
                       </Button>
                     ) : (
                       <Button
+                        className="cursor-pointer"
                         variant="outline"
                         onClick={() => handleToggleUserStatus(user.id, true)}
                       >
@@ -235,14 +239,17 @@ export default function Usuarios() {
                   <h3 className="text-gray-600">{user.nome}</h3>
                   <p className="text-gray-600">{user.email}</p>
                   <div className="flex gap-2 mt-2">
-                    <Button onClick={() => {
-                      setUsuarioEditando(user);
-                      setShowCreate(true);
-                    }}>
+                    <Button
+                      className="cursor-pointer"
+                      onClick={() => {
+                        setUsuarioEditando(user);
+                        setShowCreate(true);
+                      }}>
                       <Pencil />
                     </Button>
                     {filtroStatus === "ativos" ? (
                       <Button
+                        className="cursor-pointer"
                         variant="outline"
                         onClick={() => handleToggleUserStatus(user.id, false)}
                       >
@@ -250,6 +257,7 @@ export default function Usuarios() {
                       </Button>
                     ) : (
                       <Button
+                        className="cursor-pointer"
                         variant="outline"
                         onClick={() => handleToggleUserStatus(user.id, true)}
                       >
