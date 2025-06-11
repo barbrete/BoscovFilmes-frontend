@@ -8,6 +8,7 @@ import Cookies from "js-cookie";
 import axios from "axios";
 import FormCriarUsuario from "@/components/ui/Formularios/FormCriarUsuario";
 import { Pencil, Plus, Trash, User, UserRoundCheck, X } from "lucide-react";
+import { AdminAuth } from "@/hoc/AdminAuth";
 
 interface User {
   id: number;
@@ -19,7 +20,7 @@ interface User {
   status?: boolean;
 }
 
-export default function Usuarios() {
+function Usuarios() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
@@ -94,7 +95,7 @@ export default function Usuarios() {
 
       <header className="bg-gray-800 text-white p-4 ml-16">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <h1 className="text-3xl font-bold">BoscovFilmes</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight">BoscovFilmes Admin</h1>
           <Input placeholder="Procurar..." className="w-1/3" />
         </div>
       </header>
@@ -276,3 +277,5 @@ export default function Usuarios() {
     </div>
   );
 }
+
+export default AdminAuth(Usuarios);

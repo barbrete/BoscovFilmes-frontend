@@ -8,6 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import ModalDetalhesFilme from "@/components/ui/modal/ModalDetalhesFilme";
 import ModalAvaliacao from "@/components/ui/modal/modalAvaliacao";
+import Link from "next/link";
 
 interface Genero {
     id: number;
@@ -85,20 +86,20 @@ export default function Perfil() {
         }
     }
 
-      const buscarFilmes = async () => {
-    try {
-      const resposta = await axios.get("http://localhost:3001/filmes");
-      setFilmeSelecionado(resposta.data);
-      return resposta.data;
-    } catch (error) {
-      console.error("Erro ao buscar filmes:", error);
-      return [];
-    }
-  };
+    const buscarFilmes = async () => {
+        try {
+            const resposta = await axios.get("http://localhost:3001/filmes");
+            setFilmeSelecionado(resposta.data);
+            return resposta.data;
+        } catch (error) {
+            console.error("Erro ao buscar filmes:", error);
+            return [];
+        }
+    };
 
-  useEffect(() => {
-    buscarFilmes();
-  }, []);
+    useEffect(() => {
+        buscarFilmes();
+    }, []);
 
     const handleEditarAvaliacao = (avaliacao: Avaliacao) => {
         setAvaliacaoEditando(avaliacao);
@@ -158,22 +159,22 @@ export default function Perfil() {
                         <strong>Apelido:</strong> {profile?.apelido}
                     </p>
                     {profile?.tipo_usuario === "admin" ? (
-                        <div className="mt-4">
-                            <Button onClick={() => alert("Acessar painel de administração")}>
-                                Acessar Painel Admin
-                            </Button>
-                            <Button
-                                className="mt-2"
-                                onClick={() => alert("Gerenciar usuários")}
-                            >
-                                Gerenciar Usuários
-                            </Button>
+                        <div className="mt-4 flex flex-col gap-2">
+                            <Link href="/admin/home">
+                                <Button className="w-full">Acessar Painel Admin</Button>
+                            </Link>
+                            <Link href="/admin/usuarios">
+                                <Button className="w-full">Gerenciar Usuários</Button>
+                            </Link>
                         </div>
                     ) : (
                         <div className="mt-4">
-                            <Button onClick={() => alert("Editar Perfil")}>Editar Perfil</Button>
+                            <Link href="/perfil/editar">
+                                <Button>Editar Perfil</Button>
+                            </Link>
                         </div>
                     )}
+
                 </div>
 
                 {/* Card de avaliações */}
@@ -235,31 +236,31 @@ export default function Perfil() {
             )}
 
             <ModalAvaliacao
-        open={avaliarOpen}
-        onClose={() => setAvaliarOpen(false)}
-        movieTitle={filmeSelecionado?.nome || ""}
-        avaliacao={avaliacaoEditando}
-        onSubmit={async (rating, comment) => {
-          if (avaliacaoEditando) {
-            await axios.put(`http://localhost:3001/avaliacoes/${profile.id}/${filmeSelecionado?.id}`,
-              {
-                nota: rating,
-                comentario: comment,
-              });
-          } else {
-            await axios.post("http://localhost:3001/avaliacoes", {
-              idFilme: filmeSelecionado?.id,
-              idUsuario: profile.id,
-              nota: rating,
-              comentario: comment,
-            });
-          }
-          const filmesAtualizados = await buscarFilmes();
-          const atualizado = filmesAtualizados.find((m: { id: number | undefined; }) => m.id === filmeSelecionado?.id);
-          setFilmeSelecionado(atualizado || null);
-          setAvaliacaoEditando(null);
-        }}
-      />
+                open={avaliarOpen}
+                onClose={() => setAvaliarOpen(false)}
+                movieTitle={filmeSelecionado?.nome || ""}
+                avaliacao={avaliacaoEditando}
+                onSubmit={async (rating, comment) => {
+                    if (avaliacaoEditando) {
+                        await axios.put(`http://localhost:3001/avaliacoes/${profile.id}/${filmeSelecionado?.id}`,
+                            {
+                                nota: rating,
+                                comentario: comment,
+                            });
+                    } else {
+                        await axios.post("http://localhost:3001/avaliacoes", {
+                            idFilme: filmeSelecionado?.id,
+                            idUsuario: profile.id,
+                            nota: rating,
+                            comentario: comment,
+                        });
+                    }
+                    const filmesAtualizados = await buscarFilmes();
+                    const atualizado = filmesAtualizados.find((m: { id: number | undefined; }) => m.id === filmeSelecionado?.id);
+                    setFilmeSelecionado(atualizado || null);
+                    setAvaliacaoEditando(null);
+                }}
+            />
 
         </div>
     );

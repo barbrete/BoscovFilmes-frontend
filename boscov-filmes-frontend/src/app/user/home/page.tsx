@@ -11,6 +11,7 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import ModalDetalhesFilme from "@/components/ui/modal/ModalDetalhesFilme";
+import { UserAuth } from "@/hoc/UserAuth";
 
 interface Usuario {
   id: number;
@@ -43,7 +44,7 @@ interface Movie {
   avaliacoes?: Avaliacao[];
 }
 
-export default function Home() {
+function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [avaliarOpen, setAvaliarOpen] = useState(false);
@@ -207,3 +208,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default UserAuth(Home);

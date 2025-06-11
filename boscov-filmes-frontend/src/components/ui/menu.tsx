@@ -62,6 +62,12 @@ export default function SideMenu({ isOpen, onClose, onOpen, role }: SideMenuProp
                       <span>Gerenciar Gêneros</span>
                     </Link>
                   </li>
+                   <li>
+                    <Link href="/perfil" className="flex items-center gap-3 hover:text-pink-400 text-lg">
+                      <UserIcon size={24} />
+                      <span>Meu Perfil</span>
+                    </Link>
+                  </li>
                 </>
               )}
               {/* User */}

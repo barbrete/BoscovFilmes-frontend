@@ -6,12 +6,14 @@ import SideMenu from "@/components/ui/menu";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import axios from "axios";
+import { AdminAuth } from "@/hoc/AdminAuth";
 
 interface Genre {
     id?: number;
     descricao: string;
 }
-export default function Generos() {
+
+function Generos() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [generos, setGeneros] = useState<Genre[]>([]);
     const [editandoGenero, setEditandoGenero] = useState<Genre | null>(null);
@@ -90,7 +92,7 @@ export default function Generos() {
 
             <header className="bg-gray-800 text-white p-4 ml-16">
                 <div className="max-w-6xl mx-auto flex items-center justify-between">
-                    <h1 className="text-3xl font-bold">BoscovFilmes</h1>
+                <h1 className="text-4xl font-extrabold tracking-tight">BoscovFilmes Admin</h1>
                     <Input placeholder="Procurar Filmes..." className="w-1/3" />
                 </div>
             </header>
@@ -156,3 +158,5 @@ export default function Generos() {
         </div>
     );
 }
+
+export default AdminAuth(Generos);
