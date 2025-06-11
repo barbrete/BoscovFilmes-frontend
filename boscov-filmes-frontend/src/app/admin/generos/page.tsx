@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,12 +6,14 @@ import SideMenu from "@/components/ui/menu";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import axios from "axios";
+import withAdminRoute from "@/hocs/AdminRoute"; // Importa o HOC
 
 interface Genre {
     id?: number;
     descricao: string;
 }
-export default function Generos() {
+
+function Generos() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [generos, setGeneros] = useState<Genre[]>([]);
     const [editandoGenero, setEditandoGenero] = useState<Genre | null>(null);
@@ -118,7 +120,9 @@ export default function Generos() {
             {modalGeneroAberto && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded shadow-lg w-full max-w-sm">
-                        <h3 className="text-xl font-bold mb-4">{editandoGenero && editandoGenero.id !== undefined ? "Editar Gênero" : "Adicionar Gênero"}</h3>
+                        <h3 className="text-xl font-bold mb-4">
+                            {editandoGenero && editandoGenero.id !== undefined ? "Editar Gênero" : "Adicionar Gênero"}
+                        </h3>
                         <form
                             onSubmit={e => {
                                 e.preventDefault();
@@ -156,3 +160,5 @@ export default function Generos() {
         </div>
     );
 }
+
+export default withAdminRoute(Generos);

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -11,6 +11,7 @@ import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import ModalFilmes from "@/components/ui/modal/modalFilmes";
 import { Pencil, Trash2 } from "lucide-react";
+import withAdminRoute from "@/hocs/AdminRoute";
 
 interface Movie {
   id?: number;
@@ -29,17 +30,17 @@ interface Genre {
   descricao: string;
 }
 
-export default function Filmes() {
+function Filmes() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [generos, setGeneros] = useState<Genre[]>([]);
+  const token = Cookies.get("token");
 
   let tipoUsuario: "admin" | "user" | null = null;
 
   if (typeof window !== "undefined") {
-    const token = Cookies.get("token");
     if (token) {
       try {
         const decoded: any = jwtDecode(token);
@@ -54,7 +55,10 @@ export default function Filmes() {
   useEffect(() => {
     async function fetchGeneros() {
       try {
-        const response = await axios.get("http://localhost:3001/generos");
+        const response = await axios.get("http://localhost:3001/admin/generos", {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+        );
         setGeneros(response.data);
       } catch (error) {
         console.error("Erro ao buscar gêneros:", error);
@@ -66,7 +70,11 @@ export default function Filmes() {
   useEffect(() => {
     async function fetchMovies() {
       try {
-        const response = await axios.get("http://localhost:3001/filmes");
+        const response = await axios.get("http://localhost:3001/admin/filmes", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        });
         setMovies(response.data);
       } catch (error) {
         console.error("Erro ao buscar filmes:", error);
@@ -75,9 +83,13 @@ export default function Filmes() {
     fetchMovies();
   }, []);
 
-  async function fetchMovies() {
+  async function fetchMoviesAgain() {
     try {
-      const response = await axios.get("http://localhost:3001/filmes");
+      const response = await axios.get("http://localhost:3001/admin/filmes", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+      });
       setMovies(response.data);
     } catch (error) {
       console.error("Erro ao buscar filmes:", error);
@@ -86,7 +98,9 @@ export default function Filmes() {
 
   function handleDeleteMovie(id: number) {
     axios
-      .delete(`http://localhost:3001/filmes/${id}`)
+      .delete(`http://localhost:3001/admin/filmes/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then(() => setMovies(movies.filter((movie) => movie.id !== id)))
       .catch((error) => console.error("Erro ao excluir filme:", error));
   }
@@ -100,30 +114,42 @@ export default function Filmes() {
     try {
       if (filme.id) {
         // Edição
-        await axios.put(`http://localhost:3001/filmes/${filme.id}`, {
-          nome: filme.nome,
-          duracao: filme.duracao,
-          diretor: filme.diretor,
-          anoLancamento: filme.anoLancamento,
-          poster: filme.poster,
-          produtora: filme.produtora,
-          classificacao: filme.classificacao,
-          generos: filme.generos,
-        });
+        await axios.put(
+          `http://localhost:3001/admin/filmes/${filme.id}`,
+          {
+            nome: filme.nome,
+            duracao: filme.duracao,
+            diretor: filme.diretor,
+            anoLancamento: filme.anoLancamento,
+            poster: filme.poster,
+            produtora: filme.produtora,
+            classificacao: filme.classificacao,
+            generos: filme.generos,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       } else {
         // Criação
-        await axios.post("http://localhost:3001/filmes", {
-          nome: filme.nome,
-          duracao: filme.duracao,
-          diretor: filme.diretor,
-          anoLancamento: filme.anoLancamento,
-          poster: filme.poster,
-          produtora: filme.produtora,
-          classificacao: filme.classificacao,
-          generos: filme.generos,
-        });
+        await axios.post(
+          "http://localhost:3001/admin/filmes",
+          {
+            nome: filme.nome,
+            duracao: filme.duracao,
+            diretor: filme.diretor,
+            anoLancamento: filme.anoLancamento,
+            poster: filme.poster,
+            produtora: filme.produtora,
+            classificacao: filme.classificacao,
+            generos: filme.generos,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       }
-      await fetchMovies();
+      await fetchMoviesAgain();
     } catch (error) {
       console.error("Erro ao salvar filme:", error);
     }
@@ -148,7 +174,8 @@ export default function Filmes() {
       <main className="flex-grow max-w-6xl mx-auto p-8 ml-16">
         <section>
           <h2 className="text-2xl font-semibold mb-4">Gerenciar Filmes</h2>
-          <Button className="mb-4"
+          <Button
+            className="mb-4"
             onClick={() => {
               setEditingMovie(null);
               setIsModalOpen(true);
@@ -173,10 +200,10 @@ export default function Filmes() {
                   </CardTitle>
                   <div className="flex gap-6 mt-2 w-full justify-center mb-3">
                     <Button className="flex" onClick={() => handleEditMovie(movie)}>
-                      <Pencil className="" />
+                      <Pencil />
                     </Button>
-                    <Button className="" onClick={() => movie.id && handleDeleteMovie(movie.id)}>
-                      <Trash2 className="" />
+                    <Button onClick={() => movie.id && handleDeleteMovie(movie.id)}>
+                      <Trash2 />
                     </Button>
                   </div>
                 </CardContent>
@@ -197,3 +224,5 @@ export default function Filmes() {
     </div>
   );
 }
+
+export default withAdminRoute(Filmes);
