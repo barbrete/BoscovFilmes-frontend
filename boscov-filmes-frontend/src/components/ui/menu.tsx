@@ -59,7 +59,7 @@ export default function SideMenu({ isOpen, onClose, onOpen, role }: SideMenuProp
 
                 </>
               )}
-              {/* Itens exclusivos para usuário */}
+
               {role === "user" && (
                 <>
                   <li className="mb-2">
@@ -72,11 +72,11 @@ export default function SideMenu({ isOpen, onClose, onOpen, role }: SideMenuProp
                       Meu Perfil
                     </Link>
                   </li>
-                  <li className="mb-2">
+                  {/* <li className="mb-2">
                     <Link href="/series" className="hover:underline">
                       Minhas Avaliações
                     </Link>
-                  </li>
+                  </li> */}
 
                 </>
               )}
