@@ -31,6 +31,12 @@ interface Genero {
   descricao: string;
 }
 
+interface GeneroRelacao {
+  idFilme: number;
+  idGenero: number;
+  genero: Genero;
+}
+
 interface Movie {
   id: number;
   nome: string;
@@ -40,7 +46,7 @@ interface Movie {
   produtora: string;
   classificacao: string;
   poster: string;
-  generos?: Genero[];
+  generos?: GeneroRelacao[];
   avaliacoes?: Avaliacao[];
 }
 
@@ -51,6 +57,7 @@ function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [avaliacaoEditando, setAvaliacaoEditando] = useState<Avaliacao | null>(null);
+  const token = Cookies.get("token");
 
   const handleEditarAvaliacao = (avaliacao: Avaliacao) => {
     setAvaliacaoEditando(avaliacao);
@@ -65,7 +72,13 @@ function Home() {
   const handleExcluirAvaliacao = async (avaliacao: Avaliacao | null) => {
     if (!avaliacao) return;
     try {
-      await axios.delete(`http://localhost:3001/avaliacoes/${avaliacao.idUsuario}/${avaliacao.idFilme}`);
+      await axios.delete(`http://localhost:3001/avaliacoes/${avaliacao.idUsuario}/${avaliacao.idFilme}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
       const filmesAtualizados = await buscarFilmes();
       const atualizado = filmesAtualizados.find((m: { id: number | undefined }) => m.id === selectedMovie?.id);
       setSelectedMovie(atualizado || null);
@@ -77,7 +90,6 @@ function Home() {
   let tipoUsuario: "admin" | "user" | null = null;
 
   if (typeof window !== "undefined") {
-    const token = Cookies.get("token");
     if (token) {
       try {
         const decoded: any = jwtDecode(token);
@@ -90,7 +102,11 @@ function Home() {
 
   const buscarFilmes = async () => {
     try {
-      const resposta = await axios.get("http://localhost:3001/filmes");
+      const resposta = await axios.get("http://localhost:3001/filmes", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       setMovies(resposta.data);
       return resposta.data;
     } catch (error) {
@@ -103,7 +119,6 @@ function Home() {
     buscarFilmes();
   }, []);
 
-  const token = Cookies.get("token");
   let usuarioId = null;
   if (token) {
     try {
@@ -186,6 +201,11 @@ function Home() {
               {
                 nota: rating,
                 comentario: comment,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
               });
           } else {
             await axios.post("http://localhost:3001/avaliacoes", {
@@ -193,7 +213,12 @@ function Home() {
               idUsuario: usuarioId,
               nota: rating,
               comentario: comment,
-            });
+            },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
+              });
           }
           const filmesAtualizados = await buscarFilmes();
           const atualizado = filmesAtualizados.find((m: { id: number | undefined; }) => m.id === selectedMovie?.id);

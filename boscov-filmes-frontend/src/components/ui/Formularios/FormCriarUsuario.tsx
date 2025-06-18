@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 interface Usuario {
     id?: number;
@@ -36,6 +37,7 @@ export default function FormCriarUsuario({ usuario, tipoUsuarioPadrao = "user", 
     const [sucesso, setSucesso] = useState("");
     const [tipoUsuario, setTipoUsuario] = useState<"user" | "admin">(tipoUsuarioPadrao);
     const [loading, setLoading] = useState(false);
+    const token = Cookies.get("token");
 
     useEffect(() => {
         if (usuario) {
@@ -70,11 +72,16 @@ export default function FormCriarUsuario({ usuario, tipoUsuarioPadrao = "user", 
             if (usuario) {
                 await axios.put(`http://localhost:3001/usuarios/${usuario.id}`, {
                     nome, email, apelido, data_nascimento, password: senha, status: true, tipo_usuario: tipoUsuario
-                });
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+                );
                 setSucesso("Usuário atualizado com sucesso!");
             }
             else {
-                await axios.post("http://localhost:3001/usuarios", {
+                await axios.post("http://localhost:3001/auth/register", {
                     nome,
                     email,
                     apelido,
@@ -82,7 +89,12 @@ export default function FormCriarUsuario({ usuario, tipoUsuarioPadrao = "user", 
                     password: senha,
                     status: true,
                     tipo_usuario: tipoUsuario,
-                });
+                },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
                 if (onSuccess) onSuccess();
                 console.log(onSuccess);
                 setSucesso("Cadastro realizado com sucesso!");

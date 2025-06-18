@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import ModalExcluirAvaliacao from "./modalExcluirAvaliacao";
 import axios from "axios";
 import { Star, X } from "lucide-react";
+import Cookies from "js-cookie";
 
 interface Usuario {
   id: number;
@@ -26,6 +27,12 @@ interface Genero {
   descricao: string;
 }
 
+interface GeneroRelacao {
+  idFilme: number;
+  idGenero: number;
+  genero: Genero;
+}
+
 interface Movie {
   id: number;
   nome: string;
@@ -35,7 +42,7 @@ interface Movie {
   produtora: string;
   classificacao: string;
   poster: string;
-  generos?: Genero[];
+  generos?: GeneroRelacao[];
   avaliacoes?: Avaliacao[];
 }
 
@@ -56,14 +63,24 @@ export default function ModalDetalhesFilme({
   onExcluirAvaliacao,
   idUsuario,
 }: ModalDetalhesFilmeProps) {
+  console.log(movie);
+
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [avaliacaoParaExcluir, setAvaliacaoParaExcluir] = useState<Avaliacao | null>(null);
   const [usuarioPerfil, setUsuarioPerfil] = useState<Usuario | null>(null);
   const [modalPerfilOpen, setModalPerfilOpen] = useState(false);
+  const token = Cookies.get("token");
+  const generos = movie.generos?.map(g => g.genero) || [];
 
   async function handleVerPerfil(idUsuario: number) {
     try {
-      const response = await axios.get(`http://localhost:3001/usuarios/${idUsuario}`);
+      const response = await axios.get(`http://localhost:3001/usuarios/${idUsuario}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
       setUsuarioPerfil(response.data);
       setModalPerfilOpen(true);
     } catch (error) {
@@ -79,7 +96,7 @@ export default function ModalDetalhesFilme({
           className="absolute top-2 right-2 text-xl cursor-pointer text-gray-600 hover:text-gray-900"
           onClick={onClose}
         >
-          <X/>
+          <X />
         </button>
         <div className="flex flex-row gap-8 items-start">
           {/* Coluna do filme */}
@@ -107,9 +124,9 @@ export default function ModalDetalhesFilme({
             <div className="text-gray-700 mb-1">
               <b>Classificação:</b> {movie.classificacao}
             </div>
-            {movie.generos && movie.generos.length > 0 && (
+            {generos.length > 0 && (
               <div className="text-gray-700 mb-2">
-                <b>Gêneros:</b> {movie.generos.map(g => g.descricao).join(", ")}
+                <b>Gêneros:</b> {generos.map(g => g.descricao).join(", ")}
               </div>
             )}
             <Button

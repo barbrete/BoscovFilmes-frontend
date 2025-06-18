@@ -1,7 +1,6 @@
 "use client"
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
 import { time } from "console";
 
 interface Movie {
@@ -24,6 +23,7 @@ interface ModalFilmesProps {
 }
 
 export default function ModalFilmes({ movie, onClose, onSubmit, generos }: ModalFilmesProps) {
+  console.log(movie);
   const [nome, setNome] = useState(movie ? movie.nome : "");
   const [diretor, setDiretor] = useState(movie ? movie.diretor : "");
   const [ano, setAno] = useState<Date>(movie ? movie.anoLancamento : new Date());

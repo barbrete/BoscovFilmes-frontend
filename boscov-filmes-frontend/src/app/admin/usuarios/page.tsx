@@ -27,11 +27,10 @@ function Usuarios() {
   const [showCreate, setShowCreate] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<User | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<"ativos" | "desativados">("ativos");
-
+  const token = Cookies.get("token");
   let tipoUsuario: "admin" | "user" | null = null;
 
   if (typeof window !== "undefined") {
-    const token = Cookies.get("token");
     if (token) {
       try {
         const decoded: any = jwtDecode(token);
@@ -44,7 +43,11 @@ function Usuarios() {
 
   async function buscarUsuarios() {
     try {
-      const response = await axios.get("http://localhost:3001/usuarios");
+      const response = await axios.get("http://localhost:3001/usuarios", {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
       setUsers(response.data);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
@@ -57,7 +60,12 @@ function Usuarios() {
 
   async function handleToggleUserStatus(id: number, status: boolean) {
     try {
-      await axios.put(`http://localhost:3001/usuarios/${id}`, { status });
+      await axios.put(`http://localhost:3001/usuarios/${id}`, { status },
+        {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
       setUsers(users =>
         users.map(user =>
           user.id === id ? { ...user, status } : user

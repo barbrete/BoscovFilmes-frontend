@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -32,6 +32,12 @@ interface Genre {
   descricao: string;
 }
 
+interface GeneroRelacao {
+  idFilme: number;
+  idGenero: number;
+  genero: Genre;
+}
+
 // Para criar/editar
 interface Movie {
   id?: number;
@@ -55,13 +61,12 @@ interface Filme {
   produtora: string;
   classificacao: string;
   poster: string;
-  generos: Genre[];
+  generos?: GeneroRelacao[];
   avaliacoes?: Avaliacao[];
 }
 
 function Filmes() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [movies, setMovies] = useState<Movie[]>([]);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [generos, setGeneros] = useState<Genre[]>([]);
@@ -69,10 +74,11 @@ function Filmes() {
   const [usuarioId, setUsuarioId] = useState<number | null>(null);
   const [avaliarOpen, setAvaliarOpen] = useState(false);
   const [avaliacaoEditando, setAvaliacaoEditando] = useState<Avaliacao | null>(null);
-
-  // Modal de detalhes
+  const [filmes, setFilmes] = useState<Filme[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Filme | null>(null);
+
+  const token = Cookies.get("token");
 
   const handleEditarAvaliacao = (avaliacao: Avaliacao) => {
     setAvaliacaoEditando(avaliacao);
@@ -87,7 +93,11 @@ function Filmes() {
   const handleExcluirAvaliacao = async (avaliacao: Avaliacao | null) => {
     if (!avaliacao) return;
     try {
-      await axios.delete(`http://localhost:3001/avaliacoes/${avaliacao.idUsuario}/${avaliacao.idFilme}`);
+      await axios.delete(`http://localhost:3001/avaliacoes/${avaliacao.idUsuario}/${avaliacao.idFilme}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       const filmesAtualizados = await buscarFilmes();
       const atualizado = filmesAtualizados.find((m: { id: number | undefined }) => m.id === selectedMovie?.id);
       setSelectedMovie(atualizado || null);
@@ -95,12 +105,15 @@ function Filmes() {
       console.error("Erro ao excluir avaliação:", error);
     }
   };
-  
 
   const buscarFilmes = async () => {
     try {
-      const resposta = await axios.get("http://localhost:3001/filmes");
-      setMovies(resposta.data);
+      const resposta = await axios.get("http://localhost:3001/filmes", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setFilmes(resposta.data);
       return resposta.data;
     } catch (error) {
       console.error("Erro ao buscar filmes:", error);
@@ -113,7 +126,6 @@ function Filmes() {
   }, []);
 
   useEffect(() => {
-    const token = Cookies.get("token");
     if (token) {
       try {
         const decoded: any = jwtDecode(token);
@@ -129,7 +141,11 @@ function Filmes() {
   useEffect(() => {
     async function fetchGeneros() {
       try {
-        const response = await axios.get("http://localhost:3001/generos");
+        const response = await axios.get("http://localhost:3001/generos", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         setGeneros(response.data);
       } catch (error) {
         console.error("Erro ao buscar gêneros:", error);
@@ -138,47 +154,35 @@ function Filmes() {
     fetchGeneros();
   }, []);
 
-  useEffect(() => {
-    async function fetchMovies() {
-      try {
-        const response = await axios.get("http://localhost:3001/filmes");
-        setMovies(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar filmes:", error);
-      }
-    }
-    fetchMovies();
-  }, []);
-
-  async function fetchMovies() {
-    try {
-      const response = await axios.get("http://localhost:3001/filmes");
-      setMovies(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar filmes:", error);
-    }
-  }
-
   function handleDeleteMovie(id: number) {
     axios
-      .delete(`http://localhost:3001/filmes/${id}`)
-      .then(() => setMovies(movies.filter((movie) => movie.id !== id)))
+      .delete(`http://localhost:3001/filmes/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      .then(() => setFilmes(filmes.filter((filme) => filme.id !== id)))
       .catch((error) => console.error("Erro ao excluir filme:", error));
   }
 
-  function handleEditMovie(movie: Movie) {
+  function handleEditMovie(filme: Filme) {
+    const movie: Movie = {
+      id: filme.id,
+      nome: filme.nome,
+      diretor: filme.diretor,
+      anoLancamento: filme.anoLancamento,
+      duracao: filme.duracao,
+      produtora: filme.produtora,
+      classificacao: filme.classificacao,
+      poster: filme.poster,
+      generos: filme.generos?.map(g => g.idGenero) || [],
+    };
     setEditingMovie(movie);
     setIsModalOpen(true);
   }
 
-  function handleShowDetails(movie: Movie) {
-    const generosIds = Array.isArray(movie.generos) ? movie.generos : [];
-    const filme: Filme = {
-      ...(movie as Omit<Filme, "generos" | "avaliacoes">),
-      id: movie.id as number,
-      generos: generos.filter(g => generosIds.includes(g.id)),
-      avaliacoes: (movie as any).avaliacoes ?? []
-    };
+  // CORRIGIDO: Recebe um Filme, não Movie
+  function handleShowDetails(filme: Filme) {
     setSelectedMovie(filme);
     setModalOpen(true);
   }
@@ -186,6 +190,7 @@ function Filmes() {
   async function salvarFilme(filme: Movie) {
     try {
       if (filme.id) {
+        console.log("Salvando filme:", filme);
         // Edição
         await axios.put(`http://localhost:3001/filmes/${filme.id}`, {
           nome: filme.nome,
@@ -196,6 +201,10 @@ function Filmes() {
           produtora: filme.produtora,
           classificacao: filme.classificacao,
           generos: filme.generos,
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         });
       } else {
         // Criação
@@ -208,9 +217,13 @@ function Filmes() {
           produtora: filme.produtora,
           classificacao: filme.classificacao,
           generos: filme.generos,
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         });
       }
-      await fetchMovies();
+      await buscarFilmes();
     } catch (error) {
       console.error("Erro ao salvar filme:", error);
     }
@@ -244,28 +257,28 @@ function Filmes() {
             Adicionar Filme
           </Button>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {movies.map((movie) => (
-              <Card key={movie.id} className="shadow-lg flex flex-col items-center">
+            {filmes.map((filme) => (
+              <Card key={filme.id} className="shadow-lg flex flex-col items-center">
                 <CardHeader className="h-72 w-full relative p-0 flex justify-center">
                   <Image
-                    src={movie.poster}
-                    alt={movie.nome}
+                    src={filme.poster}
+                    alt={filme.nome}
                     fill
                     className="object-cover rounded-t-md"
                   />
                 </CardHeader>
                 <CardContent className="w-full flex flex-col items-center">
                   <CardTitle className="text-lg font-bold text-center">
-                    {movie.nome}
+                    {filme.nome}
                   </CardTitle>
                   <div className="flex gap-6 mt-2 w-full justify-center mb-3">
-                    <Button className="flex" onClick={() => handleEditMovie(movie)}>
+                    <Button className="flex" onClick={() => handleEditMovie(filme)}>
                       <Pencil className="" />
                     </Button>
-                    <Button className="flex" onClick={() => handleShowDetails(movie)}>
+                    <Button className="flex" onClick={() => handleShowDetails(filme)}>
                       <Eye className="" />
                     </Button>
-                    <Button className="" onClick={() => movie.id && handleDeleteMovie(movie.id)}>
+                    <Button className="" onClick={() => filme.id && handleDeleteMovie(filme.id)}>
                       <Trash2 className="" />
                     </Button>
                   </div>
@@ -294,8 +307,6 @@ function Filmes() {
             idUsuario={usuarioId ?? 0}
           />
         )}
-
-
       </main>
     </div>
   );

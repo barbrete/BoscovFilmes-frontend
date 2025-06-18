@@ -18,11 +18,18 @@ function Generos() {
     const [generos, setGeneros] = useState<Genre[]>([]);
     const [editandoGenero, setEditandoGenero] = useState<Genre | null>(null);
     const [modalGeneroAberto, setModalGeneroAberto] = useState(false);
+    const token = Cookies.get("token"); // ou localStorage.getItem("token")
 
     useEffect(() => {
         async function buscarGeneros() {
             try {
-                const response = await axios.get("http://localhost:3001/generos");
+                const response = await axios.get("http://localhost:3001/generos",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
                 setGeneros(response.data);
             } catch (error) {
                 console.error("Erro ao buscar gêneros:", error);
@@ -38,7 +45,10 @@ function Generos() {
 
     function excluirGenero(id: number) {
         axios
-            .delete(`http://localhost:3001/generos/${id}`)
+            .delete(`http://localhost:3001/generos/${id}`,
+                {headers: {
+                    Authorization: `Bearer ${token}`
+                }})
             .then(() => setGeneros(generos.filter((g) => g.id !== id)))
             .catch((error) => console.error("Erro ao excluir gênero:", error));
     }
@@ -47,7 +57,13 @@ function Generos() {
         if (typeof generoAtualizado.id === "number") {
             // Editar gênero existente
             axios
-                .put(`http://localhost:3001/generos/${generoAtualizado.id}`, { descricao: generoAtualizado.descricao })
+                .put(`http://localhost:3001/generos/${generoAtualizado.id}`, { descricao: generoAtualizado.descricao },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                )
                 .then((response) => {
                     setGeneros(generos.map((g) => (g.id === generoAtualizado.id ? response.data : g)));
                     setModalGeneroAberto(false);
@@ -55,9 +71,16 @@ function Generos() {
                 })
                 .catch((error) => console.error("Erro ao editar gênero:", error));
         } else {
+
             // Adicionar novo gênero
             axios
-                .post("http://localhost:3001/generos", { descricao: generoAtualizado.descricao })
+                .post("http://localhost:3001/generos", { descricao: generoAtualizado.descricao },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                )
                 .then((response) => {
                     setGeneros([...generos, response.data]);
                     setModalGeneroAberto(false);
@@ -92,7 +115,7 @@ function Generos() {
 
             <header className="bg-gray-800 text-white p-4 ml-16">
                 <div className="max-w-6xl mx-auto flex items-center justify-between">
-                <h1 className="text-4xl font-extrabold tracking-tight">BoscovFilmes Admin</h1>
+                    <h1 className="text-4xl font-extrabold tracking-tight">BoscovFilmes Admin</h1>
                     <Input placeholder="Procurar Filmes..." className="w-1/3" />
                 </div>
             </header>

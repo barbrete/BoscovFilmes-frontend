@@ -15,6 +15,12 @@ interface Genero {
     descricao: string;
 }
 
+interface GeneroRelacao {
+  idFilme: number;
+  idGenero: number;
+  genero: Genero;
+}
+
 interface Filme {
     id: number;
     nome: string;
@@ -24,7 +30,7 @@ interface Filme {
     produtora: string;
     classificacao: string;
     poster: string;
-    generos?: Genero[];
+    generos?: GeneroRelacao[];
     avaliacoes?: Avaliacao[];
 }
 
@@ -54,15 +60,21 @@ export default function Perfil() {
     const [filmeSelecionado, setFilmeSelecionado] = useState<Filme | null>(null);
     const [avaliacaoEditando, setAvaliacaoEditando] = useState<Avaliacao | null>(null);
     const [avaliarOpen, setAvaliarOpen] = useState(false);
+    const token = Cookies.get("token");
 
     useEffect(() => {
         async function fetchProfile() {
             try {
-                const token = Cookies.get("token");
                 if (!token) return;
                 const decoded: any = jwtDecode(token);
                 const userId = decoded.id;
-                const response = await axios.get(`http://localhost:3001/usuarios/${userId}`);
+                const response = await axios.get(`http://localhost:3001/usuarios/${userId}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
                 setProfile(response.data);
                 setAvaliacoes(response.data.avaliacao || []);
                 // console.log("Perfil recebido:", response.data);
@@ -88,7 +100,11 @@ export default function Perfil() {
 
     const buscarFilmes = async () => {
         try {
-            const resposta = await axios.get("http://localhost:3001/filmes");
+            const resposta = await axios.get("http://localhost:3001/filmes", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             setFilmeSelecionado(resposta.data);
             return resposta.data;
         } catch (error) {
@@ -114,10 +130,20 @@ export default function Perfil() {
     const handleExcluirAvaliacao = async (avaliacao: Avaliacao | null) => {
         if (!avaliacao) return;
         try {
-            await axios.delete(`http://localhost:3001/avaliacoes/${avaliacao.idUsuario}/${avaliacao.idFilme}`);
+            await axios.delete(`http://localhost:3001/avaliacoes/${avaliacao.idUsuario}/${avaliacao.idFilme}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             // Atualiza avaliações após exclusão
             if (profile) {
-                const response = await axios.get(`http://localhost:3001/usuarios/${profile.id}`);
+                const response = await axios.get(`http://localhost:3001/usuarios/${profile.id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
                 setAvaliacoes(response.data.avaliacao || []);
             }
         } catch (error) {
@@ -190,7 +216,11 @@ export default function Perfil() {
                                     className="border rounded-lg shadow p-4 flex flex-col items-center bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
                                     onClick={async () => {
                                         if (avaliacao.filme) {
-                                            const response = await axios.get(`http://localhost:3001/filmes/${avaliacao.filme.id}`);
+                                            const response = await axios.get(`http://localhost:3001/filmes/${avaliacao.filme.id}`, {
+                                                headers: {
+                                                    Authorization: `Bearer ${token}`
+                                                }
+                                            });
                                             console.log(response.data);
                                             setFilmeSelecionado(response.data);
                                             setModalFilmeOpen(true);
@@ -246,13 +276,21 @@ export default function Perfil() {
                             {
                                 nota: rating,
                                 comentario: comment,
-                            });
+                            }, {
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
+                        });
                     } else {
                         await axios.post("http://localhost:3001/avaliacoes", {
                             idFilme: filmeSelecionado?.id,
                             idUsuario: profile.id,
                             nota: rating,
                             comentario: comment,
+                        }, {
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
                         });
                     }
                     const filmesAtualizados = await buscarFilmes();
