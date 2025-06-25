@@ -181,7 +181,6 @@ function Filmes() {
     setIsModalOpen(true);
   }
 
-  // CORRIGIDO: Recebe um Filme, não Movie
   function handleShowDetails(filme: Filme) {
     setSelectedMovie(filme);
     setModalOpen(true);
@@ -216,7 +215,7 @@ function Filmes() {
           poster: filme.poster,
           produtora: filme.produtora,
           classificacao: filme.classificacao,
-          generos: filme.generos,
+          generosId: filme.generos,
         }, {
           headers: {
             Authorization: `Bearer ${token}`
