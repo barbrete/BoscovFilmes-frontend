@@ -1,6 +1,19 @@
-# 🎨 Frontend — BoscovFilmes
+# 🎬 Frontend — BoscovFilmes
 
-> Interface do sistema **BoscovFilmes**, desenvolvida com **Next.js** e **TailwindCSS**, integrada ao backend para exibir e manipular dados de forma intuitiva e responsiva.
+>Este projeto é uma aplicação completa para **gerenciamento e avaliação de filmes**, tendo como inspiração a crítica Isabela Boscov, possuí frontend e backend integrados via **API REST**.
+O sistema permite que usuários se cadastrem, façam login, naveguem pelo catálogo de filmes, deixem avaliações e acompanhem seu histórico. Possui **autenticação e autorização** para garantir segurança e controle de acesso, além de um **painel administrativo**.
+
+### 👥 Funcionalidades por papel
+- **Usuário**  
+  - Criar conta e fazer login  
+  - Visualizar filmes, gêneros e avaliações  
+  - Avaliar filmes e gerenciar suas próprias avaliações  
+  - Acessar página de perfil  
+
+- **Administrador**  
+  - CRUD completo de filmes, gêneros e usuários  
+  - Manter catálogo e base de usuários atualizados  
+  - Acessar página de perfil 
 
 ---
 
